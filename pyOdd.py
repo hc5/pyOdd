@@ -3,10 +3,11 @@ import sys
 
 class Client:
 	def __init__(self, server_name, port, player_name):
-		self._s = socket.socket()
 		self.last_move = None
 		self.over = False
-		self.board = [[0 for y in xrange(9)] for x in xrange(9)]
+		self.board = [[-1 if  x - y <-4 or x - y > 4 else 0 for y in xrange(9)] for x in xrange(9)]
+		return
+		self._s = socket.socket()
 		err = self._s.connect_ex((server_name, port))
 		if err:
 			print "Error connecting to server"
@@ -37,17 +38,17 @@ class Client:
 		return
 
 	def parse_move(self, msg):
-		(x, y) = (int(msg.split(" ")[1]), int(msg.split(" ")[2]))
+		(x, y) = (int(msg.split(" ")[1])+4, int(msg.split(" ")[2])+4)
 		self.board[x][y] = (self.id + 1) % 2
 		return (x, y)
 
 	def play_move(self):
 		move = play(self.last_move, self.board)
 		self.board[move[0]][move[1]] = self.id
-		self.send("%d %d %d" % (self.id, move[0], move[1]))
+		self.send("%d %d %d" % (self.id, move[0]-4, move[1]-4))
 
-	def send(self, str):
-		self._s.send("%s\n" % str)
+	def send(self, s):
+		self._s.send("%s\n" % s)
 		return
 
 	def recv(self):
@@ -61,15 +62,24 @@ class Client:
 """
 Modify this method for your AI
 
+In the playing board the center is (0,0), which makes the bottom left (-4,-4) and the 
+top right (4,4), which is difficult to work with. The board of this python client is 
+a 9x9 2d array, and it starts at (0,0) at the bottom left corner, and (8,8) at the top
+ right corner which makes it a lot simpler to work with.
+
+When the `last_move` param is given in the shifted coordinate system from (0,0) to 
+(8,8), and the `move` tuple you return should also be in the shifted coordinate system.
+
+
 last_move: (int, int) tuple. Contains the last move that was played by the opponent, if you
 are the first to play, last_move will be None
 
-board: a 9x9 int 2d array. 0 if the cell is empty, 1 if white, 2 if black. The current state
-of the board.
+board: a 9x9 int 2d array. 0 if the cell is empty, 1 if white, 2 if black, and -1 if the cell
+ is invalid. The current state of the board.
 
 
 returns: (int, int) tuple that is a valid move. If it's not valid then
-you will lose the game and fail the course.
+you will lose the game and fail the course. 
 
 """
 def play(last_move, board):
@@ -79,10 +89,24 @@ def play(last_move, board):
 	return move
 
 
+def print_board(board):
+	lines = []
+	for i in xrange(4,-5,-1):
+		line = ""
+		line+= " "*(4-i+len(xrange(0,i)))
+		for j in xrange(-4,5):
+			symbols = {-1:" ", 0:"+ ", 1:"O ", 2:"@ "}
+			line += symbols[board[i+4][j+4]]
+		lines.append(line)
+	print "\n".join(lines)
+
 
 
 
 def main():
+	if len(sys.argv) > 1:
+		Client(sys.argv[1], int(sys.argv[2]))
+		
 	Client("localhost", 8123, "pybot")
 
 if __name__ == "__main__":main()
