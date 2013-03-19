@@ -6,8 +6,8 @@ class Client:
 		self.last_move = None
 		self.over = False
 		self.board = [[-1 if  x - y <-4 or x - y > 4 else 0 for y in xrange(9)] for x in xrange(9)]
-		return
 		self._s = socket.socket()
+		print "Connecting to server"
 		err = self._s.connect_ex((server_name, port))
 		if err:
 			print "Error connecting to server"
@@ -34,18 +34,19 @@ class Client:
 			self.play_move()
 		else:
 			self.last_move = self.parse_move(msg)
-			print "Opponents played %d,%d" % self.last_move
+			print "Opponents played %d,%d,%d" % self.last_move
 		return
 
 	def parse_move(self, msg):
-		(x, y) = (int(msg.split(" ")[1])+4, int(msg.split(" ")[2])+4)
-		self.board[x][y] = (self.id + 1) % 2
-		return (x, y)
+		(c, x, y) = (0 if msg.split(" ")[1] == "WHITE" else 1, int(msg.split(" ")[2])+4, int(msg.split(" ")[3])+4)
+		self.board[x][y] = c
+		return (c,x, y)
 
 	def play_move(self):
 		move = play(self.last_move, self.board)
-		self.board[move[0]][move[1]] = self.id
-		self.send("%d %d %d" % (self.id, move[0]-4, move[1]-4))
+		self.board[move[0]][move[1]] = self.id	
+		colours = ["WHITE","BLACK"]
+		self.send("%d %s %d %d" % (self.id,colours[move[0]], move[1]-4, move[2]-4))
 
 	def send(self, s):
 		self._s.send("%s\n" % s)
@@ -71,21 +72,23 @@ When the `last_move` param is given in the shifted coordinate system from (0,0) 
 (8,8), and the `move` tuple you return should also be in the shifted coordinate system.
 
 
-last_move: (int, int) tuple. Contains the last move that was played by the opponent, if you
+last_move: (int colour, int x, int y) tuple. Contains the last move that was played by the opponent, if you
 are the first to play, last_move will be None
 
 board: a 9x9 int 2d array. 0 if the cell is empty, 1 if white, 2 if black, and -1 if the cell
  is invalid. The current state of the board.
 
 
-returns: (int, int) tuple that is a valid move. If it's not valid then
+returns: (int colour, int x, int y) tuple that is a valid move. If it's not valid then
 you will lose the game and fail the course. 
 
 """
+WHITE = 0
+BLACK = 1
 def play(last_move, board):
-	(x, y) = (0, 0)
+	(c, x, y) = (WHITE, 0, 0)
 
-	move = (x, y)
+	move = (c, x, y)
 	return move
 
 
@@ -105,8 +108,9 @@ def print_board(board):
 
 def main():
 	if len(sys.argv) > 1:
-		Client(sys.argv[1], int(sys.argv[2]))
-		
+		Client(sys.argv[1], int(sys.argv[2]), "pybot")
 	Client("localhost", 8123, "pybot")
+
+
 
 if __name__ == "__main__":main()
