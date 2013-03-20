@@ -44,7 +44,7 @@ class Client:
 
 	def play_move(self):
 		move = play(self.last_move, self.board)
-		self.board[move[0]][move[1]] = self.id	
+		self.board[move[1]][move[2]] = move[0]	
 		colours = ["WHITE","BLACK"]
 		self.send("%d %s %d %d" % (self.id,colours[move[0]], move[1]-4, move[2]-4))
 
