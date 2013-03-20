@@ -83,8 +83,8 @@ returns: (int colour, int x, int y) tuple that is a valid move. If it's not vali
 you will lose the game and fail the course. 
 
 """
-WHITE = 0
-BLACK = 1
+WHITE = 1
+BLACK = 2
 def play(last_move, board):
 	(c, x, y) = (WHITE, 0, 0)
 
