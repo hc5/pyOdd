@@ -26,12 +26,12 @@ class Client:
 		while not self.over:
 			res = self.recv()
 			if res and len(res.strip()):
-				self.procMsg(res)
+				for line in res.splitlines():
+					self.procMsg(line)
 		self._s.close()
 
 	def procMsg(self, msg):
 		msg = msg.strip()
-		print "PROCMSG: \"%s\"" % msg
 		if msg.startswith("GAMEOVER"):
 			print msg
 			self.over = True
@@ -51,7 +51,8 @@ class Client:
 		move = play(self.last_move, self.board)
 		self.board[move[1]][move[2]] = move[0]	
 		colours = ["WHITE","BLACK"]
-		self.send("%d %s %d %d" % (self.id,colours[move[0]-1], move[1]-4, move[2]-4))
+		msg = "%d %s %d %d" % (self.id,colours[move[0]-1], move[1]-4, move[2]-4)
+		self.send(msg)
 
 	def send(self, s):
 		self._s.send("%s\n" % s)
