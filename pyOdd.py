@@ -22,8 +22,9 @@ class AbstractClient:
 		self.send("START %s" % player_name)
 		print "Connected. Waiting for game to start..."
 		res = self.recv()
-		self.start()
 		self.id = int(res[12])
+		self.start()
+		
 		while not self.over:
 			res = self.recv()
 			if res:
@@ -65,7 +66,8 @@ class AbstractClient:
 		return self._s.recv(256)
 
 
-
+	def isOdd(self):
+		return self.id == 1
 
 
 
