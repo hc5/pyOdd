@@ -26,25 +26,27 @@ class AbstractClient:
 		self.id = int(res[12])
 		while not self.over:
 			res = self.recv()
-			if res and len(res.strip()):
+			if res:
 				for line in res.splitlines():
-					self.procMsg(line)
+					if len(line.strip()):
+						self.procMsg(line)
 		self._s.close()
 
 	def procMsg(self, msg):
 		msg = msg.strip()
-		if msg.startswith("GAMEOVER"):
+		if msg.startswith("GAMEOVER") or msg.startswith("WINNER"):
 			print msg
+			# for some reason the server hangs 1% of the time if i don't send this
+			self.send("");
 			self.over = True
 		elif msg.startswith("PLAY"):
 			self.play_move()
 		else:
 			self.last_move = self.parse_move(msg)
-			print "Opponents played %d,%d,%d" % self.last_move
 		return
 
 	def parse_move(self, msg):
-		(c, x, y) = (0 if msg.split(" ")[1] == "WHITE" else 1, int(msg.split(" ")[2])+4, int(msg.split(" ")[3])+4)
+		(c, x, y) = (WHITE if msg.split(" ")[1] == "WHITE" else BLACK, int(msg.split(" ")[2])+4, int(msg.split(" ")[3])+4)
 		self.board[x][y] = c
 		return (c,x, y)
 
@@ -114,6 +116,6 @@ class AbstractClient:
 			line+= " "*(4-i+len(xrange(0,i)))
 			for j in xrange(-4,5):
 				symbols = {-1:" ", 0:"+ ", 1:"O ", 2:"@ "}
-				line += symbols[board[i+4][j+4]]
+				line += symbols[board[j+4][i+4]]
 			lines.append(line)
 		print "\n".join(lines)
